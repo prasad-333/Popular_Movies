@@ -3,11 +3,11 @@ package com.example.popularmovies
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.popularmovies.model.Movie
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -34,19 +34,36 @@ class MainActivity : AppCompatActivity() {
             }
         })[MovieViewModel::class.java]
 
-        movieViewModel.popularMovies.observe(this) { popularMovies ->
-            movieAdapter.addMovies(popularMovies
-//                .filter {
-//                    it.releaseDate.startsWith(
-//                        Calendar.getInstance().get(Calendar.YEAR) .toString()
-//                    )
-//                }
-//                .sortedByDescending { it.popularity }
-            )
+//        movieViewModel.popularMovies.observe(this) { popularMovies ->
+//            movieAdapter.addMovies(popularMovies
+////                .filter {
+////                    it.releaseDate.startsWith(
+////                        Calendar.getInstance().get(Calendar.YEAR) .toString()
+////                    )
+////                }
+////                .sortedByDescending { it.popularity }
+//            )
+//        }
+//        movieViewModel.error.observe(this) { error ->
+//            if (error.isNotEmpty()) Snackbar.make(recyclerView, error, Snackbar.LENGTH_LONG).show()
+//        }
+
+        //14.03
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    movieViewModel.popularMovies.collect { movies ->
+                        movieAdapter.addMovies(movies)
+                    }
+                }
+                launch {
+                    movieViewModel.error.collect { error ->
+                        if (error.isNotEmpty()) Snackbar.make(recyclerView, error, Snackbar.LENGTH_LONG).show()
+                    }
+                }
+            }
         }
-        movieViewModel.error.observe(this) { error ->
-            if (error.isNotEmpty()) Snackbar.make(recyclerView, error, Snackbar.LENGTH_LONG).show()
-        }
+
 
 
     }
